@@ -36,8 +36,8 @@ OpenHack runs a multi-agent pipeline against your codebase:
 - **Hunters** — multiple specialized agents look for different vulnerability classes (input validation, access control, data handling, …)
 - **Feature hunters** — deeper passes on specific risk categories (XSS rendering, raw SQL, command exec, etc.)
 - **Validators** — re-read the suspect code to confirm or reject each candidate finding
-- **Sandbox verification** (`/verify sandbox`) _(Beta — requires Docker)_ — spins up your app in a Docker container and attempts to exploit each finding with live HTTP requests. Findings that are successfully exploited get a ✓ mark.
-- **Browser verification** (`/verify browser`) _(Beta — requires Docker when combined with sandbox)_ — launches a headless browser against the sandboxed app to verify client-side vulnerabilities (XSS, CSRF, DOM-based issues) with real browser execution.
+- **Sandbox verification** (`/verify sandbox`) *(Beta — requires Docker)* — spins up your app in a Docker container and attempts to exploit each finding with live HTTP requests. Findings that are successfully exploited get a ✓ mark.
+- **Browser verification** (`/verify browser`) *(Beta — requires Docker when combined with sandbox)* — launches a headless browser against the sandboxed app to verify client-side vulnerabilities (XSS, CSRF, DOM-based issues) with real browser execution.
 
 > **Docker prerequisite.** Sandbox verification requires Docker Desktop (or any working Docker daemon) installed and running on the machine where the scan runs. Browser verification inherits this when used with sandbox. If Docker isn't running, `/verify sandbox` will fail with a clear error before the scan starts.
 
@@ -45,26 +45,28 @@ For every confirmed finding you get: severity, CVSS score, file location, full d
 
 ## Slash commands
 
-| Command | Description |
-| --- | --- |
-| `/scan <path>` | Full scan on a directory (defaults to current dir) |
-| `/pause` · `/resume` | Pause and resume a running scan (Ctrl+C also pauses) |
-| `/cancel` | Permanently cancel a running scan |
-| `/sessions` | Browse and re-load past scans (also supports re-running an aborted scan with `r`) |
-| `/findings` | Re-display findings from last scan |
-| `/copy` | Copy the selected finding (description + vulnerable code + fix) for Codex / Claude Code / OpenCode |
-| `/verify sandbox` _(Beta)_ | Spin up a Docker sandbox and exploit-test each finding with live requests |
-| `/verify browser` _(Beta)_ | Launch a headless browser to verify client-side vulns (XSS, CSRF, etc.) |
-| `/login` | Re-login to your OpenHack account |
-| `/setup` | Run the setup wizard again |
-| `/config` | Show current config; `/config <key> <value>` to set |
-| `/sidebar` | Show/hide the Findings list sidebar (`Ctrl+B`) |
-| `/cost` | Cost breakdown for the last scan |
-| `/clear` | Clear scan state and return to landing |
-| `/discord` | Open the OpenHack Discord |
-| `/mouse` | Toggle mouse capture (off = native text selection) |
-| `/help` | List commands |
-| `/quit` | Exit |
+
+| Command                    | Description                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------------- |
+| `/scan <path>`             | Full scan on a directory (defaults to current dir)                                                 |
+| `/pause` · `/resume`       | Pause and resume a running scan (Ctrl+C also pauses)                                               |
+| `/cancel`                  | Permanently cancel a running scan                                                                  |
+| `/sessions`                | Browse and re-load past scans (also supports re-running an aborted scan with `r`)                  |
+| `/findings`                | Re-display findings from last scan                                                                 |
+| `/copy`                    | Copy the selected finding (description + vulnerable code + fix) for Codex / Claude Code / OpenCode |
+| `/verify sandbox` *(Beta)* | Spin up a Docker sandbox and exploit-test each finding with live requests                          |
+| `/verify browser` *(Beta)* | Launch a headless browser to verify client-side vulns (XSS, CSRF, etc.)                            |
+| `/login`                   | Re-login to your OpenHack account                                                                  |
+| `/setup`                   | Run the setup wizard again                                                                         |
+| `/config`                  | Show current config; `/config <key> <value>` to set                                                |
+| `/sidebar`                 | Show/hide the Findings list sidebar (`Ctrl+B`)                                                     |
+| `/cost`                    | Cost breakdown for the last scan                                                                   |
+| `/clear`                   | Clear scan state and return to landing                                                             |
+| `/discord`                 | Open the OpenHack Discord                                                                          |
+| `/mouse`                   | Toggle mouse capture (off = native text selection)                                                 |
+| `/help`                    | List commands                                                                                      |
+| `/quit`                    | Exit                                                                                               |
+
 
 ## Keyboard shortcuts (Findings tab)
 
@@ -91,26 +93,34 @@ The TUI captures mouse events by default (for scrolling and clicking). To select
 - **Linux / Windows**: Hold `Shift` and drag to select.
 - **Or**: Run `/mouse` to disable mouse capture entirely — the terminal's native selection works normally until you toggle it back on.
 
-## Headless mode (no TUI)
+## CLI commands (headless)
 
-For CI, scripts, or one-off scans where you don't want the chat interface, pass a path directly:
+For CI, scripts, or one-off scans where you don't want the TUI:
 
 ```bash
-openhack /path/to/repo
+openhack scan /path/to/repo
 ```
 
-OpenHack runs the same pipeline as the TUI, prints progress to stdout, writes a JSON report to `~/.openhack/scans/scan-<session-id>.json`, and exits. Other headless commands:
+OpenHack runs the same pipeline as the TUI, prints progress to stdout, writes a JSON report to `~/.openhack/scans/<session-id>.json`, and exits.
 
-| Command | Description |
-| --- | --- |
-| `openhack /path/to/repo` | Full scan, headless |
-| `openhack --classify /path/to/repo` | Just classify frameworks + detect entry points (fast preview, no LLM calls) |
-| `openhack --list-sessions` | List all saved sessions |
-| `openhack --list-entry-points <id>` | Show every entry point in a session |
-| `openhack --resume <id>` | Resume a previous scan from where it left off |
-| `openhack --help` | Show usage |
 
-Exit code is `0` on a completed scan (regardless of findings), `1` on error, `130` on `Ctrl+C`.
+| Command                    | Description                                              |
+| -------------------------- | -------------------------------------------------------- |
+| `openhack`                 | Launch interactive TUI                                   |
+| `openhack scan [path]`     | Full scan, headless (defaults to `.`)                    |
+| `openhack sessions`        | List all saved scans                                     |
+| `openhack resume <id>`     | Resume a scan from its last checkpoint                   |
+| `openhack classify [path]` | Classify frameworks + detect entry points (no LLM calls) |
+| `openhack login`           | Log in to your OpenHack account                          |
+| `openhack setup`           | Run the setup wizard                                     |
+| `openhack --help`          | Show usage                                               |
+
+
+Scans are checkpointed after each pipeline stage. If a scan is interrupted or fails, resume it:
+
+```bash
+openhack resume <session-id>
+```
 
 ## Configuration
 
@@ -118,10 +128,12 @@ Configuration is stored in `~/.openhack/config` (mode `0600` since it contains a
 
 You can override at runtime via environment variables:
 
-| Variable | Effect |
-| --- | --- |
-| `OPENHACK_API_KEY` | Bearer token for the OpenHack inference API |
-| `OPENHACK_DEV=1` | Point the CLI at local dev servers (app on `:9080`, inference on `:8787`) for self-hosted setups |
+
+| Variable           | Effect                                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------------------ |
+| `OPENHACK_API_KEY` | Bearer token for the OpenHack inference API                                                      |
+| `OPENHACK_DEV=1`   | Point the CLI at local dev servers (app on `:9080`, inference on `:8787`) for self-hosted setups |
+
 
 ## Privacy
 

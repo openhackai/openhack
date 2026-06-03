@@ -70,5 +70,6 @@ packages = ["openhack"]
 dev-dependencies = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-cov>=7.1.0",
 ]
 

@@ -37,6 +37,7 @@ class CheckpointManager:
         }
         path = self.checkpoint_dir / f"{step_name}.json"
         path.write_text(json.dumps(checkpoint, indent=2, default=str))
+        print(f"    Checkpoint saved: {step_name} — resume with: openhack --resume {self.session_id}")
         logger.info(f"Checkpoint saved: {step_name} -> {path}")
 
     def load(self, step_name: str) -> Optional[dict]:

@@ -960,7 +960,7 @@ class CoordinatorAgent(BaseAgent):
                     )
 
                 except Exception as e:
-                    logger.error(f"Sandbox verification failed: {e}", exc_info=True)
+                    logger.debug(f"Sandbox verification failed: {e}", exc_info=True)
                     self.session.add_trace(
                         agent="coordinator", event_type="sandbox_error",
                         content=f"Sandbox verification failed: {str(e)}. Findings preserved without sandbox verification.",
@@ -1064,7 +1064,7 @@ class CoordinatorAgent(BaseAgent):
                         content=f"Browser verification skipped: {str(e)}",
                     )
                 except Exception as e:
-                    logger.error(f"Browser verification failed: {e}", exc_info=True)
+                    logger.debug(f"Browser verification failed: {e}", exc_info=True)
                     self.session.add_trace(
                         agent="coordinator", event_type="browser_error",
                         content=f"Browser verification failed: {str(e)}. Findings preserved.",
@@ -1098,7 +1098,7 @@ class CoordinatorAgent(BaseAgent):
 
         except Exception as e:
             self.session.status = SessionStatus.FAILED
-            logger.error(f"Scan failed: {e}", exc_info=True)
+            logger.debug(f"Scan failed: {e}", exc_info=True)
             raise
 
     async def run(self, task: str, context: Optional[dict] = None) -> dict:

@@ -190,7 +190,7 @@ class LLMClient:
             try:
                 if attempt > 0:
                     wait_time = 5 * (2 ** (attempt - 1))
-                    logger.warning(f"Retrying OpenHack API call (attempt {attempt + 1}/{max_retries + 1}) after {wait_time}s")
+                    print(f"    Retrying API call (attempt {attempt + 1}/{max_retries + 1}) after {wait_time}s...")
                     await asyncio.sleep(wait_time)
 
                 stream = await self.client.chat.completions.create(**kwargs)
@@ -324,7 +324,7 @@ class LLMClient:
                 await asyncio.sleep(wait_time)
                 continue
             except Exception as e:
-                logger.error(f"OpenHack API error: {e}", exc_info=True)
+                logger.debug(f"OpenHack API error: {e}", exc_info=True)
                 if stream:
                     try: await stream.close()
                     except Exception: pass
