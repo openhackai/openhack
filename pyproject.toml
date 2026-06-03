@@ -1,6 +1,6 @@
 [project]
 name = "openhack"
-version = "0.1.0b1"
+version = "0.1.0"
 description = "AI-powered security scanner for your codebase. Find SQL injection, XSS, IDOR, auth bypass, and more — straight from your terminal."
 readme = "README.md"
 requires-python = ">=3.11"
