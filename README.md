@@ -24,7 +24,7 @@ openhack
 
 On first run you'll go through a one-time setup:
 
-1. Pick **Login with OpenHack account** (recommended) — opens a browser, you log in, get **$25 in free credits**, and the CLI gets a token automatically.
+1. Pick **Login with OpenHack account** (recommended) — opens a browser, you log in, get **$20 in free credits**, and the CLI gets a token automatically.
 2. Type `/scan .` to scan the current directory, or `/scan path/to/repo` for somewhere else.
 3. While scanning, the **Trace tab** shows live agent activity (recon → hunters → validators). When the scan finishes, the **Findings tab** shows everything that was found.
 

@@ -304,7 +304,7 @@ async def _run_wizard(is_first_time: bool = True) -> bool:
     setup_choice = await _select_menu_async(
         "How would you like to proceed?",
         [
-            ("login", "Login with OpenHack account", "(Recommended, free $25 credits on signup)"),
+            ("login", "Login with OpenHack account", "(Recommended, free $20 credits on signup)"),
             ("apikey", "Use OpenHack API Key", ""),
             ("custom", "Custom setup", ""),
         ],
