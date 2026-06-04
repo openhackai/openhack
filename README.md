@@ -8,6 +8,18 @@ Like Claude Code Security / Codex Security but open source and **exclusively use
 ### [Join Discord](https://openhack.com/discord)
 ### [Website](https://openhack.com)
 
+## Get started
+
+```bash
+pipx install openhack
+```
+
+Or with pip:
+
+```bash
+pip install openhack
+```
+
 ## How it works
 OpenHack does `recon` -> `hunting` -> `validation` -> `verification` all in one pipeline to find high quality verified vulnerabilities.
 
@@ -19,17 +31,6 @@ OpenHack does `recon` -> `hunting` -> `validation` -> `verification` all in one 
 
 **Verification**: Verification agent performs a full browser + sandbox based attack to find verify vulnerabilities in a real docker / DOM environment.
 
-## Install
-
-```bash
-pipx install openhack
-```
-
-Or with pip:
-
-```bash
-pip install openhack
-```
 
 ## Quick start
 
