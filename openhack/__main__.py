@@ -213,7 +213,8 @@ def main():
         if needs_first_time_setup():
             completed = run_first_time_setup()
             if not completed:
-                print("\nSetup skipped. Run openhack again or use /setup inside the TUI.\n")
+                print("\nSetup skipped. Run 'openhack' again to retry.\n")
+                return
 
         from openhack.tui import main as tui_main
         tui_main()

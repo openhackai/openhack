@@ -99,6 +99,10 @@ class Settings(BaseSettings):
     openhack_connect_timeout: int = 30
     openhack_max_retries: int = 5
 
+    # Send prompt_cache_key with API calls. Supported by OpenHack and OpenAI;
+    # some OpenAI-compatible endpoints (e.g. Groq) reject unknown params.
+    prompt_caching: bool = True
+
     recon_model_id: Optional[str] = None
     hunter_model_id: Optional[str] = None
     validator_model_id: Optional[str] = None

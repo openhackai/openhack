@@ -10,11 +10,11 @@ input for API keys, and a final confirmation screen.
 """
 
 import asyncio
-import getpass
 import os
 from typing import Optional
 
 from prompt_toolkit import print_formatted_text
+from prompt_toolkit.shortcuts import PromptSession
 from prompt_toolkit.formatted_text import HTML
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.application import Application
@@ -92,6 +92,12 @@ def _has_running_loop() -> bool:
         return loop.is_running()
     except RuntimeError:
         return False
+
+
+async def _input_async(message: str, is_password: bool = False) -> str:
+    """Async text input with full editing keybindings (word jump/delete)."""
+    session: PromptSession = PromptSession()
+    return await session.prompt_async(message, is_password=is_password)
 
 
 # ── Arrow-key selection menu ──────────────────────────────────────
@@ -173,7 +179,7 @@ def _select_menu(title: str, items: list[tuple[str, str, str]], default_idx: int
 
 # ── API key input ─────────────────────────────────────────────────
 
-def _prompt_api_key(provider: dict, existing_key: Optional[str] = None) -> Optional[str]:
+async def _prompt_api_key(provider: dict, existing_key: Optional[str] = None) -> Optional[str]:
     """Prompt for an API key with masked display."""
     _html("")
     _html(f'  {B}API Key for {_esc(provider["display"])}{EB}')
@@ -193,7 +199,7 @@ def _prompt_api_key(provider: dict, existing_key: Optional[str] = None) -> Optio
         _html("")
 
     try:
-        key = getpass.getpass("  API Key: ").strip()
+        key = (await _input_async("  API Key: ", is_password=True)).strip()
     except (EOFError, KeyboardInterrupt):
         return existing_key
 
@@ -209,7 +215,7 @@ def _prompt_api_key(provider: dict, existing_key: Optional[str] = None) -> Optio
 
 # ── Base URL input (for OpenHack provider) ───────────────────────────
 
-def _prompt_base_url(existing: Optional[str] = None) -> str:
+async def _prompt_base_url(existing: Optional[str] = None) -> str:
     if not existing:
         existing = settings.openhack_base_url
     _html("")
@@ -218,7 +224,7 @@ def _prompt_base_url(existing: Optional[str] = None) -> str:
     _html(f'  {DIM}Press Enter to keep default{EDIM}')
     _html("")
     try:
-        url = input("  Base URL: ").strip()
+        url = (await _input_async("  Base URL: ")).strip()
     except (EOFError, KeyboardInterrupt):
         return existing
     return url if url else existing
@@ -226,7 +232,7 @@ def _prompt_base_url(existing: Optional[str] = None) -> str:
 
 # ── Summary / confirmation ────────────────────────────────────────
 
-def _show_summary(provider: dict, model_id: str, api_key: Optional[str], base_url: Optional[str] = None, org_name: Optional[str] = None) -> bool:
+async def _show_summary(provider: dict, model_id: str, api_key: Optional[str], base_url: Optional[str] = None, org_name: Optional[str] = None) -> bool:
     _html("")
     _html(f'  {"━" * 50}')
     _html(f'  {B}Configuration Summary{EB}')
@@ -244,7 +250,7 @@ def _show_summary(provider: dict, model_id: str, api_key: Optional[str], base_ur
     _html("")
 
     try:
-        confirm = input("  Save this configuration? [Y/n] ").strip().lower()
+        confirm = (await _input_async("  Save this configuration? [Y/n] ")).strip().lower()
     except (EOFError, KeyboardInterrupt):
         return False
 
@@ -340,49 +346,52 @@ async def _run_wizard(is_first_time: bool = True) -> bool:
     elif setup_choice == 1:
         # User pastes an existing OpenHack API token from the dashboard.
         existing_key = cfg.get(provider["key_field"])
-        api_key = _prompt_api_key(provider, existing_key)
+        api_key = await _prompt_api_key(provider, existing_key)
         if not api_key:
             _html("")
             _html(f'  {YELLOW}⚠{EYELLOW}  An API key is required.')
             _html(f'  {DIM}Sign up at: {_esc(settings.openhack_app_url)}/signup{EDIM}')
             _html("")
     else:
-        # Custom: pick model, base URL, paste key.
-        model_items = [
-            (m[0], m[1], m[2])
-            for m in provider["models"]
-        ]
-        current_model = cfg.get("model") or cfg.get("openhack_model_id")
-        default_model_idx = 0
-        for i, (mid, _, _) in enumerate(provider["models"]):
-            if mid == current_model:
-                default_model_idx = i
-                break
-
-        model_idx = await _select_menu_async(
-            "Choose a model:",
-            model_items,
-            default_idx=default_model_idx,
-        )
-        if model_idx < 0:
+        # Custom: base URL, API key, model string.
+        _html("")
+        _html(f'  {B}OpenAI-Compatible API Endpoint{EB}')
+        existing_base = cfg.get("openhack_base_url") or default_base_url
+        _html(f'  {DIM}Current: {_esc(existing_base)}{EDIM}')
+        _html(f'  {DIM}Press Enter to keep current{EDIM}')
+        _html("")
+        try:
+            url_input = (await _input_async("  Base URL: ")).strip()
+        except (EOFError, KeyboardInterrupt):
             _html(f'  {DIM}Setup cancelled.{EDIM}')
             _html("")
             return False
-        model_id = provider["models"][model_idx][0]
-
-        base_url = _prompt_base_url(default_base_url)
+        base_url = url_input if url_input else existing_base
 
         existing_key = cfg.get(provider["key_field"])
-        api_key = _prompt_api_key(provider, existing_key)
+        api_key = await _prompt_api_key(provider, existing_key)
         if not api_key:
             _html("")
             _html(f'  {YELLOW}⚠{EYELLOW}  An API key is required.')
-            _html(f'  {DIM}Sign up at: {_esc(settings.openhack_app_url)}/signup{EDIM}')
             _html("")
+
+        _html("")
+        _html(f'  {B}Model{EB}')
+        existing_model = cfg.get("model") or cfg.get("openhack_model_id") or default_model
+        _html(f'  {DIM}Current: {_esc(existing_model)}{EDIM}')
+        _html(f'  {DIM}Press Enter to keep current{EDIM}')
+        _html("")
+        try:
+            model_input = (await _input_async("  Model: ")).strip()
+        except (EOFError, KeyboardInterrupt):
+            _html(f'  {DIM}Setup cancelled.{EDIM}')
+            _html("")
+            return False
+        model_id = model_input if model_input else existing_model
 
     # ── Step 3: Summary & confirm ─────────────────────────────────
     org_name = login_result.org_name if login_result else None
-    if not _show_summary(provider, model_id, api_key, base_url, org_name):
+    if not await _show_summary(provider, model_id, api_key, base_url, org_name):
         _html(f'  {DIM}Setup cancelled. No changes saved.{EDIM}')
         _html("")
         return False

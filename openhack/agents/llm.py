@@ -71,6 +71,10 @@ class LLMClient:
         "kimi-k2.5": {"input": 0.50, "output": 2.80},
     }
 
+    # Set to True for the rest of the session when the endpoint rejects
+    # prompt_cache_key (e.g. Groq), so we stop sending it.
+    _cache_key_unsupported = False
+
     def __init__(
         self,
         model: Optional[str] = None,
@@ -156,7 +160,20 @@ class LLMClient:
         tool_choice: Optional[str] = None,
         on_chunk: Optional[Callable] = None,
     ) -> LLMResponse:
-        return await self._chat(messages, tools, system, tool_choice=tool_choice, on_chunk=on_chunk)
+        try:
+            return await self._chat(messages, tools, system, tool_choice=tool_choice, on_chunk=on_chunk)
+        except openai.APIStatusError as e:
+            detail = str(e).lower()
+            if (
+                self.prompt_cache_key
+                and not LLMClient._cache_key_unsupported
+                and ("prompt_cache_key" in detail or "prompt cache key" in detail)
+            ):
+                LLMClient._cache_key_unsupported = True
+                print("    Endpoint doesn't support prompt caching — retrying without it.")
+                print("    To disable permanently: /config prompt_caching false")
+                return await self._chat(messages, tools, system, tool_choice=tool_choice, on_chunk=on_chunk)
+            raise
 
     async def _chat(
         self,
@@ -179,7 +196,13 @@ class LLMClient:
         if tools:
             kwargs["tools"] = self._convert_tools_to_openai_format(tools)
             kwargs["tool_choice"] = tool_choice or "auto"
-        if self.prompt_cache_key:
+        # Re-read settings via the module so /config changes apply mid-session.
+        from openhack import config as _config
+        if (
+            self.prompt_cache_key
+            and _config.settings.prompt_caching
+            and not LLMClient._cache_key_unsupported
+        ):
             kwargs["prompt_cache_key"] = self.prompt_cache_key
 
         max_retries = settings.openhack_max_retries

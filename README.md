@@ -155,10 +155,11 @@ Configuration is stored in `~/.openhack/config` (mode `0600` since it contains a
 You can override at runtime via environment variables:
 
 
-| Variable           | Effect                                                                                           |
-| ------------------ | ------------------------------------------------------------------------------------------------ |
-| `OPENHACK_API_KEY` | Bearer token for the OpenHack inference API                                                      |
-| `OPENHACK_DEV=1`   | Point the CLI at local dev servers (app on `:9080`, inference on `:8787`) for self-hosted setups |
+| Variable            | Effect                                                                                                                                 |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `OPENHACK_API_KEY`  | Bearer token for the OpenHack inference API                                                                                            |
+| `OPENHACK_DEV=1`    | Point the CLI at local dev servers (app on `:9080`, inference on `:8787`) for self-hosted setups                                       |
+| `PROMPT_CACHING=0`  | Stop sending `prompt_cache_key` with API calls — needed for OpenAI-compatible endpoints that reject it (also: `/config prompt_caching false`) |
 
 
 ## Privacy

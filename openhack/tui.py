@@ -2609,7 +2609,7 @@ class OpenHackApp:
         parts = arg.strip().split(None, 1)
         key = parts[0].lower()
         value = parts[1] if len(parts) > 1 else ""
-        valid = {"provider", "model", "openhack_api_key", "openhack_model_id"}
+        valid = {"provider", "model", "openhack_api_key", "openhack_model_id", "openhack_base_url", "prompt_caching"}
         if key not in valid:
             self.last_status_line = f"unknown config key: {key}"
             return
@@ -2625,6 +2625,7 @@ class OpenHackApp:
             save_user_config({"provider": self.provider})
         elif key == "model":
             self.model = value
+        reload_settings()
         self.last_status_line = f"saved {key}"
 
     # ── Setup / login (delegate to setup.py / auth.py) ────────────
